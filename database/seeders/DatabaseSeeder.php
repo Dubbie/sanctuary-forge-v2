@@ -13,5 +13,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(ItemStatCostSeeder::class);
         $this->call(PropertySeeder::class);
+        $this->call(BodyLocationSeeder::class);
+        $this->call(ItemTypeSeeder::class);
     }
 }
