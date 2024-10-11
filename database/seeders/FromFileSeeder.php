@@ -19,6 +19,10 @@ abstract class FromFileSeeder extends Seeder
         for ($line = 1; $line < count($properties); $line++) {
             $split = explode("\t", $properties[$line]);
 
+            if ($split[0] === 'Expansion') {
+                continue;
+            }
+
             $property = [];
             foreach ($split as $index => $value) {
                 $header = $headers[$index];
@@ -43,7 +47,7 @@ abstract class FromFileSeeder extends Seeder
     protected function getNumber(mixed $value): ?int
     {
         if ($value === '') {
-            return null;
+            return 0;
         }
 
         return (int) $value;
