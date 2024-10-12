@@ -19,7 +19,7 @@ abstract class FromFileSeeder extends Seeder
         for ($line = 1; $line < count($properties); $line++) {
             $split = explode("\t", $properties[$line]);
 
-            if ($split[0] === 'Expansion') {
+            if ($split[0] === 'Expansion' || $split[0] === '') {
                 continue;
             }
 

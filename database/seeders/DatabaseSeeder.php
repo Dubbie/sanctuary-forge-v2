@@ -17,5 +17,8 @@ class DatabaseSeeder extends Seeder
         $this->call(ItemTypeSeeder::class);
         $this->call(ArmorSeeder::class);
         $this->call(WeaponSeeder::class);
+        $this->call(AutoMagicSeeder::class);
+        $this->call(MagicPrefixSeeder::class);
+        $this->call(MagicSuffixSeeder::class);
     }
 }

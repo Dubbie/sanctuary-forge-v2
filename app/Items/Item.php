@@ -61,6 +61,27 @@ class Item implements JsonSerializable
         $this->gridY = $data['gridY'] ?? 0;
 
         $this->sockets = $data['sockets'] ?? [];
+
+        $this->init();
+    }
+
+    public function init()
+    {
+        $this->generateAllProperties();
+    }
+
+    public function generateAllProperties()
+    {
+        // Generate auto prefix
+        $common = $this->getCommonRecord();
+        if ($common->auto_prefix) {
+            $this->generateAutoPrefixProperty($common);
+        }
+    }
+
+    public function generateAutoPrefixProperty(ItemCommonRecord $common)
+    {
+        $autoMagicGroup = $common->auto_prefix;
     }
 
     public function getCommonRecord()
