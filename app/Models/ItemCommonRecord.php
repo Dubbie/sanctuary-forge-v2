@@ -56,7 +56,8 @@ class ItemCommonRecord extends Model
         'required_dexterity',
     ];
 
-    protected $appends = ['image_url', 'automagic_affix'];
+    protected $with = ['itemType'];
+    protected $appends = ['image_url', 'automagic_affix', 'hardcoded_affixes'];
 
     public function imageUrl(): Attribute
     {
@@ -72,6 +73,18 @@ class ItemCommonRecord extends Model
         );
     }
 
+    public function hardcodedAffixes(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->getHardcodedAffixes(),
+        );
+    }
+
+    public function itemType()
+    {
+        return $this->hasOne(ItemTypeRecord::class, 'code', 'type');
+    }
+
     private function getImageUrl(): string
     {
         return '/img/' . $this->inventory_file . '.png';
@@ -85,5 +98,65 @@ class ItemCommonRecord extends Model
         }
 
         return null;
+    }
+
+    private function getHardcodedAffixes(): array
+    {
+        $props = [];
+
+        // Early return if the item type doesn't match
+        if ($this->type !== 'blun' && !in_array('blun', $this->itemType->equivRecords->pluck('equiv_code')->toArray())) {
+            return $props;
+        }
+
+        // Create the affix for blunt weapons
+        $affix = new ItemAffixCommon([
+            'name' => 'Blunt Weapon',
+            'spawnable' => true,
+            'spawn_on_rare' => false,
+            'min_level' => 1,
+            'max_level' => 99,
+            'required_level' => 1,
+            'class' => 'Any',
+            'class_required_level' => 1,
+            'class_specific' => false,
+            'group' => 'Undead',
+            'include_item_types' => [],
+            'exclude_item_types' => [],
+            'automagic' => true,
+            'type' => 'prefix',
+        ]);
+
+        // Create the property descriptor
+        $pd = $this->createPropertyDescriptor('dmg-undead', 50, 50);
+
+        // Set the property relation for the affix
+        $affix->setRelation('properties', collect([$pd]));
+
+        // Add the affix to the list
+        $props[] = $affix;
+
+        return $props;
+    }
+
+    /**
+     * Create a PropertyDescriptor instance with the given parameters.
+     *
+     * @param string $code
+     * @param int $min
+     * @param int $max
+     * @return PropertyDescriptor
+     */
+    private function createPropertyDescriptor(string $code, int $min, int $max): PropertyDescriptor
+    {
+        $property = PropertyRecord::find($code);
+        $pd = new PropertyDescriptor([
+            'code' => $property->code,
+            'parameter' => null,
+            'min' => $min,
+            'max' => $max,
+        ]);
+
+        return $pd->setRelation('propertyRecord', $property);
     }
 }

@@ -16,6 +16,8 @@ export function useItem(itemData) {
         imageUrl: itemData.image_url || '',
         automagicAffix: itemData.automagic_affix || null,
         properties: itemData.properties || [],
+        type: itemData.type || null,
+        hardcodedAffixes: itemData.hardcoded_affixes || [],
         attributes: {
             damageOneHand: {
                 min: itemData.min_damage || 0,
@@ -147,6 +149,24 @@ export function useItem(itemData) {
                     ...inputParams,
                 );
                 item.properties.push(property);
+            });
+        }
+
+        // Add hardcoded pseudo affix if it's set
+        if (item.hardcodedAffixes) {
+            item.hardcodedAffixes.forEach((affix) => {
+                affix.properties.forEach((propertyDescriptor) => {
+                    const inputParams = [
+                        propertyDescriptor.parameter,
+                        propertyDescriptor.min,
+                        propertyDescriptor.max,
+                    ];
+                    const { property } = useProperty(
+                        propertyDescriptor,
+                        ...inputParams,
+                    );
+                    item.properties.push(property);
+                });
             });
         }
     };
