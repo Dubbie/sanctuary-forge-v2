@@ -1,7 +1,7 @@
+import { useModifiers } from '@/composables/useModifier';
+import { useProperty } from '@/composables/useProperty';
 import { DescriptionLine } from '@/utils/descriptionLine';
 import { reactive } from 'vue';
-import { useModifiers } from './useModifier';
-import { useProperty } from './useProperty';
 
 export function useItem(itemData) {
     const item = reactive({
@@ -60,14 +60,16 @@ export function useItem(itemData) {
             // Add label
             lines.push(new DescriptionLine(this.name));
 
-            // Defense
-            if (this.attributes.defense.min > 0) {
-                const { min, max } = this.attributes.defense;
-                lines.push(new DescriptionLine(`Defense: [${min}-${max}]`));
+            // Add defense description
+            const { min: defMin, max: defMax } = this.attributes.defense;
+            if (defMin > 0) {
+                lines.push(
+                    new DescriptionLine(`Defense: [${defMin}-${defMax}]`),
+                );
             }
 
             // Damage types
-            lines.push(
+            const damageDescriptions = [
                 this.generateDamageDescription(
                     'One-Hand',
                     this.attributes.damageOneHand.min,
@@ -83,10 +85,12 @@ export function useItem(itemData) {
                     this.attributes.damageMissile.min,
                     this.attributes.damageMissile.max,
                 ),
-            );
+            ].filter(Boolean);
+
+            lines.push(...damageDescriptions);
 
             // Required stats
-            lines.push(
+            const requirementDescriptions = [
                 this.generateRequirementDescription(
                     'Required Strength',
                     this.requiredStrength,
@@ -99,36 +103,24 @@ export function useItem(itemData) {
                     'Required Level',
                     this.requiredLevel,
                 ),
-            );
+            ].filter(Boolean);
 
-            // Generate stat strings
-            // for (const property of this.properties) {
-            //     for (const stat of property.stats) {
-            //         lines.push(
-            //             new DescriptionLine(
-            //                 stat.toString(),
-            //                 DescriptionLine.COLORS.BLUE,
-            //             ),
-            //         );
-            //     }
-            // }
-            let stats = item.properties
-                .map((property) => {
-                    return property.stats;
-                })
-                .flat();
+            lines.push(...requirementDescriptions);
 
+            const stats = item.properties.flatMap((property) => {
+                return property.stats;
+            });
             const { modifiers } = useModifiers(stats);
-            for (const _modifiers of modifiers.value) {
-                for (const modifier of _modifiers) {
+            modifiers.value.forEach((modifierArray) => {
+                modifierArray.forEach((modifier) => {
                     lines.push(
                         new DescriptionLine(
                             modifier.description,
                             DescriptionLine.COLORS.BLUE,
                         ),
                     );
-                }
-            }
+                });
+            });
 
             // Filter out null values
             return lines.filter(Boolean);
@@ -136,9 +128,8 @@ export function useItem(itemData) {
     });
 
     const generateProperties = () => {
-        // Add automagic affix if it's set
-        if (item.automagicAffix) {
-            item.automagicAffix.properties.forEach((propertyDescriptor) => {
+        const addProperties = (affix) => {
+            affix.properties.forEach((propertyDescriptor) => {
                 const inputParams = [
                     propertyDescriptor.parameter,
                     propertyDescriptor.min,
@@ -150,25 +141,15 @@ export function useItem(itemData) {
                 );
                 item.properties.push(property);
             });
+        };
+
+        // Add properties from automagic affix
+        if (item.automagicAffix) {
+            addProperties(item.automagicAffix);
         }
 
-        // Add hardcoded pseudo affix if it's set
-        if (item.hardcodedAffixes) {
-            item.hardcodedAffixes.forEach((affix) => {
-                affix.properties.forEach((propertyDescriptor) => {
-                    const inputParams = [
-                        propertyDescriptor.parameter,
-                        propertyDescriptor.min,
-                        propertyDescriptor.max,
-                    ];
-                    const { property } = useProperty(
-                        propertyDescriptor,
-                        ...inputParams,
-                    );
-                    item.properties.push(property);
-                });
-            });
-        }
+        // Add properties from hardcoded affixes
+        item.hardcodedAffixes.forEach(addProperties);
     };
 
     const updateAttributes = () => {
