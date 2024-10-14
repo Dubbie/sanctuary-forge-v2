@@ -1,12 +1,10 @@
-import { AllResistanceHandler } from '@/modifierHandlers/AllResistanceHandler';
 import { DefaultModifierHandler } from '@/modifierHandlers/DefaultModifierHandler';
-import { PoisonDamageHandler } from '@/modifierHandlers/PoisonDamageModifierHandler';
 
 class ModifierFactory {
     constructor() {
         this.strategies = [
-            new PoisonDamageHandler(),
-            new AllResistanceHandler(),
+            // new PoisonDamageHandler(),
+            // new AllResistanceHandler(),
         ];
     }
 

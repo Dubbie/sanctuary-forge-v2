@@ -1,32 +1,38 @@
 import Modifier from '@/models/Modifier';
 
 export class DefaultModifierHandler {
-    constructor(handledStats) {
-        this.handledStats = new Set(handledStats);
-    }
-
-    create(stats) {
+    handle(stats, sourceName, startIndex = 0) {
         const defaultModifiers = [];
+        let index = startIndex;
 
         // Iterate through all stats and create a modifier for each unhandled stat
         for (const stat of stats) {
-            if (!this.handledStats.has(stat.record.name)) {
-                // Check if stat is not already handled
-                const modifier = this.createModifier(stat);
-                if (modifier) {
-                    defaultModifiers.push(modifier);
-                }
+            const source = {
+                name: sourceName,
+                index: index,
+            };
+
+            const modifier = this.createModifier(stat, source);
+            if (modifier) {
+                defaultModifiers.push(modifier);
+                index++;
             }
         }
 
         return defaultModifiers;
     }
 
-    createModifier(stat) {
+    createModifier(stat, source) {
         return new Modifier(
             stat.record.name,
-            [stat.record.name],
+            [
+                {
+                    name: stat.record.name,
+                    value: stat.values[0],
+                },
+            ],
             stat.toString(),
+            source,
         );
     }
 }

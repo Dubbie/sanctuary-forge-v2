@@ -29,8 +29,9 @@ const FUNCTIONS = {
     FN_STATE_APPLY_TO_TARGET: 24,
 };
 
-export function useProperty(propertyDescriptor, ...inputParams) {
+export function useProperty(source, propertyDescriptor, ...inputParams) {
     const property = reactive({
+        source: source,
         record: propertyDescriptor.property_record || null,
         inputParams: inputParams,
         stats: [],

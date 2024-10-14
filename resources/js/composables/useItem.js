@@ -1,7 +1,16 @@
-import { useModifiers } from '@/composables/useModifier';
 import { useProperty } from '@/composables/useProperty';
+import {
+    getHandlerAndStats,
+    HANDLER_REGISTRY,
+} from '@/modifierHandlers/handlerRegistry';
 import { DescriptionLine } from '@/utils/descriptionLine';
 import { reactive } from 'vue';
+
+const SOURCE = {
+    AUTOMAGIC: 'automagic',
+    BLUNT: 'blunt',
+    AFFIX: 'affix',
+};
 
 export function useItem(itemData) {
     const item = reactive({
@@ -15,7 +24,8 @@ export function useItem(itemData) {
         requiredDexterity: itemData.required_dexterity || 1,
         imageUrl: itemData.image_url || '',
         automagicAffix: itemData.automagic_affix || null,
-        properties: itemData.properties || [],
+        bluntAffix: itemData.blunt_affix || null, // Assuming you have this
+        properties: [],
         type: itemData.type || null,
         hardcodedAffixes: itemData.hardcoded_affixes || [],
         attributes: {
@@ -36,31 +46,26 @@ export function useItem(itemData) {
                 max: itemData.max_ac || 0,
             },
         },
+        modifiers: [],
 
-        // Helper method for generating damage descriptions
+        // Helper methods for generating descriptions...
         generateDamageDescription(type, min, max) {
-            if (min > 0) {
-                return new DescriptionLine(`${type} Damage: ${min} to ${max}`);
-            }
-            return null;
+            return min > 0
+                ? new DescriptionLine(`${type} Damage: ${min} to ${max}`)
+                : null;
         },
 
-        // Helper method for generating stat descriptions
         generateRequirementDescription(statName, statValue) {
-            if (statValue > 1) {
-                return new DescriptionLine(`${statName}: ${statValue}`);
-            }
-            return null;
+            return statValue > 1
+                ? new DescriptionLine(`${statName}: ${statValue}`)
+                : null;
         },
 
-        // Description getter
         get description() {
             const lines = [];
 
-            // Add label
             lines.push(new DescriptionLine(this.name));
 
-            // Add defense description
             const { min: defMin, max: defMax } = this.attributes.defense;
             if (defMin > 0) {
                 lines.push(
@@ -68,28 +73,22 @@ export function useItem(itemData) {
                 );
             }
 
-            // Damage types
-            const damageDescriptions = [
-                this.generateDamageDescription(
-                    'One-Hand',
-                    this.attributes.damageOneHand.min,
-                    this.attributes.damageOneHand.max,
-                ),
-                this.generateDamageDescription(
-                    'Two-Hand',
-                    this.attributes.damageTwoHand.min,
-                    this.attributes.damageTwoHand.max,
-                ),
-                this.generateDamageDescription(
-                    'Throwing',
-                    this.attributes.damageMissile.min,
-                    this.attributes.damageMissile.max,
-                ),
-            ].filter(Boolean);
+            const damageTypes = [
+                { type: 'One-Hand', data: this.attributes.damageOneHand },
+                { type: 'Two-Hand', data: this.attributes.damageTwoHand },
+                { type: 'Throwing', data: this.attributes.damageMissile },
+            ];
 
-            lines.push(...damageDescriptions);
+            damageTypes.forEach(({ type, data }) => {
+                const { min, max } = data;
+                const damageDescription = this.generateDamageDescription(
+                    type,
+                    min,
+                    max,
+                );
+                if (damageDescription) lines.push(damageDescription);
+            });
 
-            // Required stats
             const requirementDescriptions = [
                 this.generateRequirementDescription(
                     'Required Strength',
@@ -107,35 +106,22 @@ export function useItem(itemData) {
 
             lines.push(...requirementDescriptions);
 
-            const stats = item.properties.flatMap((property) => {
-                return property.stats;
-            });
-            const { modifiers } = useModifiers(stats);
-            modifiers.value.forEach((modifierArray) => {
-                modifierArray.forEach((modifier) => {
-                    lines.push(
-                        new DescriptionLine(
-                            modifier.description,
-                            DescriptionLine.COLORS.BLUE,
-                        ),
-                    );
-                });
-            });
-
-            // Filter out null values
-            return lines.filter(Boolean);
+            return lines;
         },
     });
 
-    const generateProperties = () => {
+    const generatePropertiesForSource = (sourceName, sourceData) => {
+        console.log(`Generating properties for ${sourceName}`);
+
         const addProperties = (affix) => {
-            affix.properties.forEach((propertyDescriptor) => {
+            affix.properties.forEach((propertyDescriptor, index) => {
                 const inputParams = [
                     propertyDescriptor.parameter,
                     propertyDescriptor.min,
                     propertyDescriptor.max,
                 ];
                 const { property } = useProperty(
+                    { name: sourceName, index },
                     propertyDescriptor,
                     ...inputParams,
                 );
@@ -143,23 +129,90 @@ export function useItem(itemData) {
             });
         };
 
-        // Add properties from automagic affix
-        if (item.automagicAffix) {
-            addProperties(item.automagicAffix);
-        }
+        if (sourceData) {
+            console.log(sourceData);
 
-        // Add properties from hardcoded affixes
-        item.hardcodedAffixes.forEach(addProperties);
+            addProperties(sourceData);
+        }
     };
 
-    const updateAttributes = () => {
-        // TODO: Handle this.
+    const generateModifiers = () => {
+        const sources = [
+            {
+                name: SOURCE.AUTOMAGIC,
+                data: [item.automagicAffix],
+            }, // Convert object to array
+            { name: SOURCE.BLUNT, data: item.hardcodedAffixes },
+        ];
+
+        // Handle each source
+        sources.forEach(({ name, data }) => {
+            if (Array.isArray(data)) {
+                data.forEach((affix) => {
+                    generatePropertiesForSource(name, affix); // Process properties for each source
+                });
+            } else {
+                console.warn(`${name} data is not an array:`, data); // Log if not an array
+            }
+        });
+
+        // Handling modifiers for each property type
+        sources.forEach(({ name, data }) => {
+            if (Array.isArray(data)) {
+                // Ensure data is an array
+                const stats = item.properties.filter(
+                    (property) => property.source.name === name,
+                );
+                handleModifiers(stats, name);
+            } else {
+                console.warn(`No stats found for ${name}:`, data);
+            }
+        });
+    };
+
+    const handleModifiers = (properties, sourceName) => {
+        const stats = properties.flatMap((property) => property.stats); // Gather stats from properties
+        let handledStats = [];
+        let index = 0;
+
+        for (const [group, { handler, expectedStats }] of Object.entries(
+            HANDLER_REGISTRY,
+        )) {
+            if (group === 'DEFAULT') continue;
+
+            const matchedStats = stats.filter((stat) =>
+                expectedStats.includes(stat.record.name),
+            );
+            if (matchedStats.length === expectedStats.length) {
+                const source = { name: sourceName, index };
+                const modifier = new handler(matchedStats).handle(
+                    matchedStats,
+                    source,
+                );
+                handledStats.push(...expectedStats);
+                item.modifiers.push(modifier);
+            }
+        }
+
+        // Add remaining stats as regular modifiers
+        addDefaultModifiers(stats, handledStats, sourceName);
+    };
+
+    const addDefaultModifiers = (stats, handledStats, sourceName) => {
+        const { handler: DefaultHandler } = getHandlerAndStats('DEFAULT');
+        const remainingStats = stats.filter(
+            (stat) => !handledStats.includes(stat.record.name),
+        );
+        const defaultHandler = new DefaultHandler();
+        const defaultModifiers = defaultHandler.handle(
+            remainingStats,
+            sourceName,
+        );
+        item.modifiers.push(...defaultModifiers);
     };
 
     const init = () => {
-        // Update the attributes based on the properties
-        generateProperties();
-        updateAttributes();
+        generateModifiers();
     };
 
     init();
