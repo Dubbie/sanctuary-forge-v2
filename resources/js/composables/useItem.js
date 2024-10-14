@@ -24,7 +24,7 @@ export function useItem(itemData) {
         requiredDexterity: itemData.required_dexterity || 1,
         imageUrl: itemData.image_url || '',
         automagicAffix: itemData.automagic_affix || null,
-        bluntAffix: itemData.blunt_affix || null, // Assuming you have this
+        bluntAffix: itemData.blunt_affix || null,
         properties: [],
         type: itemData.type || null,
         hardcodedAffixes: itemData.hardcoded_affixes || [],
@@ -106,74 +106,60 @@ export function useItem(itemData) {
 
             lines.push(...requirementDescriptions);
 
+            // Add modifier descriptions
+            lines.push(
+                ...this.modifiers.map(
+                    (modifier) =>
+                        new DescriptionLine(
+                            modifier.description,
+                            DescriptionLine.COLORS.BLUE,
+                        ),
+                ),
+            );
+
             return lines;
         },
     });
 
-    const generatePropertiesForSource = (sourceName, sourceData) => {
+    const processAffixProperties = (sourceName, affix) => {
         console.log(`Generating properties for ${sourceName}`);
-
-        const addProperties = (affix) => {
-            affix.properties.forEach((propertyDescriptor, index) => {
-                const inputParams = [
-                    propertyDescriptor.parameter,
-                    propertyDescriptor.min,
-                    propertyDescriptor.max,
-                ];
-                const { property } = useProperty(
-                    { name: sourceName, index },
-                    propertyDescriptor,
-                    ...inputParams,
-                );
-                item.properties.push(property);
-            });
-        };
-
-        if (sourceData) {
-            console.log(sourceData);
-
-            addProperties(sourceData);
+        if (!affix) {
+            console.warn(`No affix data provided for ${sourceName}`);
+            return;
         }
+        affix.properties.forEach((propertyDescriptor, index) => {
+            const { property } = useProperty(
+                { name: sourceName, index },
+                propertyDescriptor,
+                propertyDescriptor.parameter,
+                propertyDescriptor.min,
+                propertyDescriptor.max,
+            );
+            item.properties.push(property);
+        });
     };
 
     const generateModifiers = () => {
         const sources = [
-            {
-                name: SOURCE.AUTOMAGIC,
-                data: [item.automagicAffix],
-            }, // Convert object to array
+            { name: SOURCE.AUTOMAGIC, data: [item.automagicAffix] },
             { name: SOURCE.BLUNT, data: item.hardcodedAffixes },
         ];
 
-        // Handle each source
         sources.forEach(({ name, data }) => {
             if (Array.isArray(data)) {
-                data.forEach((affix) => {
-                    generatePropertiesForSource(name, affix); // Process properties for each source
-                });
+                data.forEach((affix) => processAffixProperties(name, affix));
+                handleModifiers(item.properties, name);
             } else {
-                console.warn(`${name} data is not an array:`, data); // Log if not an array
-            }
-        });
-
-        // Handling modifiers for each property type
-        sources.forEach(({ name, data }) => {
-            if (Array.isArray(data)) {
-                // Ensure data is an array
-                const stats = item.properties.filter(
-                    (property) => property.source.name === name,
-                );
-                handleModifiers(stats, name);
-            } else {
-                console.warn(`No stats found for ${name}:`, data);
+                console.warn(`${name} data is not an array:`, data);
             }
         });
     };
 
     const handleModifiers = (properties, sourceName) => {
-        const stats = properties.flatMap((property) => property.stats); // Gather stats from properties
+        const stats = properties
+            .filter((property) => property.source.name === sourceName)
+            .flatMap((property) => property.stats);
         let handledStats = [];
-        let index = 0;
 
         for (const [group, { handler, expectedStats }] of Object.entries(
             HANDLER_REGISTRY,
@@ -184,7 +170,7 @@ export function useItem(itemData) {
                 expectedStats.includes(stat.record.name),
             );
             if (matchedStats.length === expectedStats.length) {
-                const source = { name: sourceName, index };
+                const source = { name: sourceName };
                 const modifier = new handler(matchedStats).handle(
                     matchedStats,
                     source,
