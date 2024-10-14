@@ -14,4 +14,11 @@ class PropertyStatRecord extends Model
         'value',
         'function_id'
     ];
+
+    protected $with = ['statRecord'];
+
+    public function statRecord()
+    {
+        return $this->belongsTo(ItemStatCostRecord::class, 'stat', 'name');
+    }
 }

@@ -15,11 +15,29 @@ class PropertyDescriptor extends Model
         'max',        // Maximum value
     ];
 
+    protected $with = ['propertyRecord'];
+
     /**
      * Get the owning propertyHolder model (SetItem, UniqueItem, Set, MagicPrefix, etc.).
      */
     public function propertyHolder()
     {
         return $this->morphTo();
+    }
+
+    /**
+     * Get the property record.
+     */
+    public function propertyRecord()
+    {
+        return $this->belongsTo(PropertyRecord::class, 'code');
+    }
+
+    /**
+     * Get the property stat records.
+     */
+    public function propertyStatRecords()
+    {
+        return $this->hasManyThrough(PropertyStatRecord::class, PropertyRecord::class);
     }
 }

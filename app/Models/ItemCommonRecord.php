@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 
 class ItemCommonRecord extends Model
@@ -54,4 +55,35 @@ class ItemCommonRecord extends Model
         'extra_range',
         'required_dexterity',
     ];
+
+    protected $appends = ['image_url', 'automagic_affix'];
+
+    public function imageUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->getImageUrl(),
+        );
+    }
+
+    public function automagicAffix(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->getAutomagicAffix(),
+        );
+    }
+
+    private function getImageUrl(): string
+    {
+        return '/img/' . $this->inventory_file . '.png';
+    }
+
+    private function getAutomagicAffix(): ?ItemAffixCommon
+    {
+        if ($this->auto_prefix) {
+            $affix = ItemAffixCommon::where('group', '=', $this->auto_prefix)->orderBy('min_level', 'desc')->first();
+            return $affix;
+        }
+
+        return null;
+    }
 }

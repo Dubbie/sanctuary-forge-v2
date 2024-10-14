@@ -16,3 +16,4 @@ Route::get('/', function () {
 });
 
 Route::get('/items', [ItemController::class, 'index'])->name('items.index');
+Route::get('/items/{item}', [ItemController::class, 'show'])->name('items.show');

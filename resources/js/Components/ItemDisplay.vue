@@ -1,34 +1,50 @@
 <script setup>
 import { computed, ref } from 'vue';
 import AppTooltip from '@/Components/AppTooltip.vue';
+import { Link } from '@inertiajs/vue3';
+import DescriptionLine from '@/Components/DescriptionLine.vue';
 
 const props = defineProps({
     item: {
         type: Object,
         required: true,
     },
+    link: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const showingTooltip = ref(false);
 
-const imageUrl = computed(() => {
-    return '/img/' + props.item.image + '.png';
+const linkUrl = computed(() => {
+    if (props.link) {
+        return route('items.show', {
+            item: props.item.id,
+        });
+    }
+
+    return null;
 });
 </script>
 
 <template>
-    <div class="relative">
+    <component :is="link ? Link : 'div'" class="relative" :href="linkUrl">
         <div
             class="flex flex-col items-center"
             @mouseenter="showingTooltip = true"
             @mouseleave="showingTooltip = false"
         >
-            <img :src="imageUrl" alt="" />
-            <p>{{ item.name }}</p>
+            <img :src="item.imageUrl" alt="" />
+            <p class="text-sm font-semibold">{{ item.name }}</p>
         </div>
 
         <AppTooltip v-show="showingTooltip">
-            <p v-for="line in item.description" :key="line">{{ line }}</p>
+            <DescriptionLine
+                v-for="line in item.description"
+                :key="line"
+                :description-line="line"
+            />
         </AppTooltip>
-    </div>
+    </component>
 </template>

@@ -11,6 +11,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call(TblEntrySeeder::class);
         $this->call(ItemStatCostSeeder::class);
         $this->call(PropertySeeder::class);
         $this->call(BodyLocationSeeder::class);

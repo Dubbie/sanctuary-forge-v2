@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 
 class ItemAffixCommon extends Model
@@ -32,7 +33,11 @@ class ItemAffixCommon extends Model
     protected $casts = [
         'include_item_types' => 'array',
         'exclude_item_types' => 'array',
+        'spawn_on_rare' => 'boolean',
+        'class_specific' => 'boolean',
     ];
+
+    protected $with = ['properties'];
 
     /**
      * Get all the properties for the affix.

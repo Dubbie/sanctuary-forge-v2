@@ -17,6 +17,10 @@ class PropertyRecord extends Model
         'is_active'
     ];
 
+    protected $with = [
+        'propertyStatRecords'
+    ];
+
     public function propertyStatRecords()
     {
         return $this->hasMany(PropertyStatRecord::class, 'property_code', 'code');

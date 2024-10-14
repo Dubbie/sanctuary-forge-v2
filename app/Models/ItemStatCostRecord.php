@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Services\TranslationService;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 
 class ItemStatCostRecord extends Model
@@ -20,6 +22,7 @@ class ItemStatCostRecord extends Model
         'op_param',
         'op_base',
         'desc_priority',
+        'desc_val',
         'desc_func_id',
         'desc_str_pos',
         'desc_str_neg',
@@ -32,8 +35,30 @@ class ItemStatCostRecord extends Model
         'desc_group_str_2',
     ];
 
+    protected $appends = ['positive', 'negative'];
+
     public function opStats()
     {
         return $this->hasMany(ItemStatCostRecord::class, 'op_stat_name', 'name');
+    }
+
+    public function positive(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->translate('desc_str_pos')
+        );
+    }
+
+    public function negative(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->translate('desc_str_neg')
+        );
+    }
+
+    private function translate(string $key): ?string
+    {
+        $actualKey = $this->$key;
+        return $actualKey ? TranslationService::getTranslation($actualKey) : null;
     }
 }

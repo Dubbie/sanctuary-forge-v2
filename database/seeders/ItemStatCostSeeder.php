@@ -47,7 +47,7 @@ class ItemStatCostSeeder extends FromFileSeeder
                 'desc_group_str_2' => $this->getString($record['dgrpstr2']),
             ];
 
-            $descValStr = $this->getString('descval');
+            $descValStr = $this->getString($record['descval']);
             switch ($descValStr) {
                 case '2':
                     $fill['desc_val'] = 2;
