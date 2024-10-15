@@ -4,6 +4,7 @@ import AppButton from './AppButton.vue';
 import ItemDisplay from './ItemDisplay.vue';
 import Modal from './Modal.vue';
 import { useItemStore } from '@/stores/itemStore';
+import { useAffixStore } from '@/stores/affixStore';
 import SelectInput from './SelectInput.vue';
 
 defineProps({
@@ -14,6 +15,7 @@ defineProps({
 });
 
 const itemStore = useItemStore();
+const affixStore = useAffixStore();
 
 const item = computed(() => {
     return itemStore.selectedItem;
@@ -23,7 +25,7 @@ const selectedAutomod = computed(() => {
     return itemStore.selectedAutomod;
 });
 const automodOptions = computed(() => {
-    return itemStore.availableAutomods.map((automod) => {
+    return affixStore.availableAutomods.map((automod) => {
         return {
             label: automod.description,
             value: automod,
