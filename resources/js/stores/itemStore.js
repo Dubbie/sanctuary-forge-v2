@@ -8,25 +8,33 @@ export const useItemStore = defineStore('item', {
         selectedAutomod: null,
     }),
     actions: {
-        setItem(item) {
+        async setItem(item) {
             const { item: _item } = useItem(item);
             this.selectedItem = _item;
 
             if (this.selectedItem) {
                 const affixStore = useAffixStore();
-                affixStore.loadAvailableAutomods(this.selectedItem.id);
+                await affixStore.loadAvailableAffixes(this.selectedItem.id);
+
+                if (affixStore.availableAffixes.automagic.length === 1) {
+                    this.setSelectedAutomod(
+                        affixStore.availableAffixes.automagic[0],
+                    );
+                }
             }
         },
 
         setSelectedAutomod(automod) {
+            const affixStore = useAffixStore();
+
             if (!automod) {
-                this.selectedAutomod = null;
+                if (affixStore.availableAffixes.automagic.length > 1) {
+                    this.selectedAutomod = null;
+                }
                 return;
             }
 
-            const affixStore = useAffixStore();
-            affixStore.setSelectedAffix(automod);
-            this.selectedAutomod = affixStore.selectedAffix;
+            this.selectedAutomod = automod.clone();
         },
 
         updateAutomagicModifier(statName, value) {

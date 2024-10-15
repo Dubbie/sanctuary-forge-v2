@@ -4,38 +4,53 @@ import { defineStore } from 'pinia';
 
 export const useAffixStore = defineStore('affix', {
     state: () => ({
-        rawAffixes: [],
-        availableAutomods: [],
-        selectedAutomod: null,
+        rawAffixes: {
+            prefixes: [],
+            suffixes: [],
+            automagic: [],
+        },
+        availableAffixes: {
+            prefixes: [],
+            suffixes: [],
+            automagic: [],
+        },
         modifierManager: null,
     }),
     actions: {
-        async loadAvailableAutomods(itemId) {
+        async loadAvailableAffixes(itemId) {
             const { data } = await axios.get(
                 route('api.affixes.available', { item: itemId }),
             );
-            this.rawAffixes = data;
+
+            const { prefixes, suffixes, automagic } = data;
+            this.rawAffixes = { prefixes, suffixes, automagic };
 
             this.generateAffixesWithModifiers();
         },
 
         generateAffixesWithModifiers() {
-            this.availableAutomods = [];
-            this.selectedAutomod = null;
+            this.availableAffixes = {
+                prefixes: [],
+                suffixes: [],
+                automagic: [],
+            };
 
             // Generate modifiers for each affix
-            for (const affix of this.rawAffixes) {
-                this.generateModifiersByAffix(affix);
+            const keys = ['automagic'];
+            for (const key of keys) {
+                for (const affix of this.rawAffixes[key]) {
+                    this.generateModifiersByAffix(affix, key);
+                }
             }
         },
 
-        generateModifiersByAffix(affix) {
+        generateModifiersByAffix(affix, key) {
             // Use the reusable function to get modifiers
             const modifiers = getModifiersByPropertyDescriptors(
                 affix.properties,
             );
             const affixModel = new Affix(affix, modifiers);
-            this.availableAutomods.push(affixModel);
+            this.availableAffixes[key].push(affixModel);
         },
 
         setSelectedAffix(affix) {

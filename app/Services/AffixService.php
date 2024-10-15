@@ -16,17 +16,21 @@ class AffixService
         $affixes = self::getFilteredAffixes($types, $item);
 
         // Filter prefixes, suffixes, and automagic affixes
-        // $prefixes = $affixes->filter(function ($affix) {
-        //     return $affix->type === 'prefix' && $affix->automagic === 0;
-        // });
-        // $suffixes = $affixes->filter(function ($affix) {
-        //     return $affix->type === 'suffix' && $affix->automagic === 0;
-        // });
+        $prefixes = $affixes->filter(function ($affix) {
+            return $affix->type === 'prefix' && $affix->automagic === 0;
+        });
+        $suffixes = $affixes->filter(function ($affix) {
+            return $affix->type === 'suffix' && $affix->automagic === 0;
+        });
         $automagic = $affixes->filter(function ($affix) use ($item) {
             return $affix->automagic === 1 && $affix->group === $item->auto_prefix;
         });
 
-        return $automagic;
+        return [
+            'prefixes' => array_values($prefixes->toArray()),
+            'suffixes' => array_values($suffixes->toArray()),
+            'automagic' => array_values($automagic->toArray()),
+        ];
     }
 
     /**

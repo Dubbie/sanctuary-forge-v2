@@ -25,7 +25,7 @@ const selectedAutomod = computed(() => {
     return itemStore.selectedAutomod;
 });
 const automodOptions = computed(() => {
-    return affixStore.availableAutomods.map((automod) => {
+    return affixStore.availableAffixes.automagic.map((automod) => {
         return {
             label: automod.description,
             value: automod,
