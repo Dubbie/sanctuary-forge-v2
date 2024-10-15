@@ -1,16 +1,5 @@
-import { useProperty } from '@/composables/useProperty';
-import {
-    getHandlerAndStats,
-    HANDLER_REGISTRY,
-} from '@/modifierHandlers/handlerRegistry';
 import { DescriptionLine } from '@/utils/descriptionLine';
 import { reactive } from 'vue';
-
-const SOURCE = {
-    AUTOMAGIC: 'automagic',
-    BLUNT: 'blunt',
-    AFFIX: 'affix',
-};
 
 export function useItem(itemData) {
     const item = reactive({
@@ -121,85 +110,7 @@ export function useItem(itemData) {
         },
     });
 
-    const processAffixProperties = (sourceName, affix) => {
-        console.log(`Generating properties for ${sourceName}`);
-        if (!affix) {
-            console.warn(`No affix data provided for ${sourceName}`);
-            return;
-        }
-        affix.properties.forEach((propertyDescriptor, index) => {
-            const { property } = useProperty(
-                { name: sourceName, index },
-                propertyDescriptor,
-                propertyDescriptor.parameter,
-                propertyDescriptor.min,
-                propertyDescriptor.max,
-            );
-            item.properties.push(property);
-        });
-    };
-
-    const generateModifiers = () => {
-        const sources = [
-            { name: SOURCE.AUTOMAGIC, data: [item.automagicAffix] },
-            { name: SOURCE.BLUNT, data: item.hardcodedAffixes },
-        ];
-
-        sources.forEach(({ name, data }) => {
-            if (Array.isArray(data)) {
-                data.forEach((affix) => processAffixProperties(name, affix));
-                handleModifiers(item.properties, name);
-            } else {
-                console.warn(`${name} data is not an array:`, data);
-            }
-        });
-    };
-
-    const handleModifiers = (properties, sourceName) => {
-        const stats = properties
-            .filter((property) => property.source.name === sourceName)
-            .flatMap((property) => property.stats);
-        let handledStats = [];
-
-        for (const [group, { handler, expectedStats }] of Object.entries(
-            HANDLER_REGISTRY,
-        )) {
-            if (group === 'DEFAULT') continue;
-
-            const matchedStats = stats.filter((stat) =>
-                expectedStats.includes(stat.record.name),
-            );
-            if (matchedStats.length === expectedStats.length) {
-                const source = { name: sourceName };
-                const modifier = new handler(matchedStats).handle(
-                    matchedStats,
-                    source,
-                );
-                handledStats.push(...expectedStats);
-                item.modifiers.push(modifier);
-            }
-        }
-
-        // Add remaining stats as regular modifiers
-        addDefaultModifiers(stats, handledStats, sourceName);
-    };
-
-    const addDefaultModifiers = (stats, handledStats, sourceName) => {
-        const { handler: DefaultHandler } = getHandlerAndStats('DEFAULT');
-        const remainingStats = stats.filter(
-            (stat) => !handledStats.includes(stat.record.name),
-        );
-        const defaultHandler = new DefaultHandler();
-        const defaultModifiers = defaultHandler.handle(
-            remainingStats,
-            sourceName,
-        );
-        item.modifiers.push(...defaultModifiers);
-    };
-
-    const init = () => {
-        generateModifiers();
-    };
+    const init = () => {};
 
     init();
 

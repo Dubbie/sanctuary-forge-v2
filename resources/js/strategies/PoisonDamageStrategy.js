@@ -1,32 +1,8 @@
 import Modifier from '@/models/Modifier';
+import ModifierStrategy from './ModifierStrategy.js';
 
-export class PoisonDamageHandler {
-    constructor() {
-        this.poisonMin = {};
-        this.poisonMax = {};
-        this.poisonLength = {};
-    }
-
-    handle(stats, source) {
-        // Extract relevant stats using destructuring
-        const { poisonMin, poisonMax, poisonLength } = this.extractStats(stats);
-
-        // Prepare the modifier stats
-        const modStats = [
-            { name: 'poisonmindam', value: poisonMin?.values[0] },
-            { name: 'poisonmaxdam', value: poisonMax?.values[0] },
-            { name: 'poisonlength', value: poisonLength?.values[0] },
-        ].filter((stat) => stat.value !== undefined); // Filter out undefined values
-
-        const description = this.getDescription(
-            poisonMin,
-            poisonMax,
-            poisonLength,
-        );
-        return new Modifier('dmg_poison', modStats, description, source);
-    }
-
-    extractStats(stats) {
+class PoisonDamageStrategy extends ModifierStrategy {
+    apply(stats) {
         const poisonMin = stats.find(
             (stat) => stat.record.name === 'poisonmindam',
         );
@@ -37,10 +13,29 @@ export class PoisonDamageHandler {
             (stat) => stat.record.name === 'poisonlength',
         );
 
-        return { poisonMin, poisonMax, poisonLength };
+        if (!poisonMin || !poisonMax || !poisonLength) {
+            console.warn('Some poison stats are missing!');
+            return null;
+        }
+
+        return new Modifier('dmg_poison', stats, (stats) =>
+            this.getDescription(stats),
+        );
     }
 
-    getDescription(poisonMin, poisonMax, poisonLength) {
+    getDescription(stats) {
+        console.log(stats);
+
+        const poisonMin = stats.find(
+            (stat) => stat.record.name === 'poisonmindam',
+        );
+        const poisonMax = stats.find(
+            (stat) => stat.record.name === 'poisonmaxdam',
+        );
+        const poisonLength = stats.find(
+            (stat) => stat.record.name === 'poisonlength',
+        );
+
         const length = poisonLength?.values[0].getFloat() || 0;
         const minDamage = this.calculateDamage(poisonMin, length);
         const maxDamage = this.calculateDamage(poisonMax, length);
@@ -51,8 +46,9 @@ export class PoisonDamageHandler {
 
     calculateDamage(stat, length) {
         if (!stat) return { min: 0, max: 0 }; // Handle missing stat gracefully
-        const min = Math.floor((stat.values[0].min * length) / 256);
-        const max = Math.floor((stat.values[0].max * length) / 256);
+        const value = stat.values[0].getFloat();
+        const min = Math.floor(((value || stat.values[0].min) * length) / 256);
+        const max = Math.floor(((value || stat.values[0].max) * length) / 256);
         return { min, max };
     }
 
@@ -69,3 +65,5 @@ export class PoisonDamageHandler {
             : `${formattedMin} to ${formattedMax}`;
     }
 }
+
+export default PoisonDamageStrategy;

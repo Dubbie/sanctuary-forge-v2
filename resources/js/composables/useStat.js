@@ -33,15 +33,34 @@ export function useStat(iscRecord, inputValues) {
         toString: () => {
             return generateDescription();
         },
+
+        clone() {
+            const clonedStat = useStat(this.record, inputValues); // Pass iscRecord and inputValues
+            // Copy all properties
+            clonedStat.record = this.record;
+            clonedStat.values = this.values.map((statValue) =>
+                statValue.clone(),
+            );
+            return clonedStat.Stat;
+        },
     });
 
     const init = () => {
+        if (!iscRecord) {
+            return;
+        }
+
         Stat.values = [];
 
         // Create stat values based on the desc func id
         const descFuncId = Stat.record.desc_func_id;
 
+        if (!descFuncId) {
+            console.log(Stat.record);
+        }
+
         switch (descFuncId) {
+            case undefined:
             case 0:
                 // special case for poisonlength, or other stats, which have a
                 // 0-value descfnID field but need to store values
@@ -79,6 +98,21 @@ export function useStat(iscRecord, inputValues) {
                     .setHasMinMax(true)
                     .setStringer(stringerIntPercentageSigned);
                 break;
+            case 6:
+                // +25 to Life (Based on Character Level)
+                Stat.values[0] = newStatValue(INT_VAL, SUM).setStringer(
+                    stringerIntSigned,
+                );
+                break;
+            case 13:
+                // +5 to Paladin Skill Levels
+                Stat.values[0] = newStatValue(INT_VAL, SUM)
+                    .setHasMinMax(true)
+                    .setStringer(stringerIntSigned);
+                Stat.values[1] = newStatValue(INT_VAL, SUM).setStringer(
+                    stringerClassOnly,
+                );
+                break;
             case 14:
                 // +5 to Combat Skills (Paladin Only)
                 Stat.values[0] = newStatValue(INT_VAL, SUM)
@@ -108,9 +142,13 @@ export function useStat(iscRecord, inputValues) {
         const processInputValues = (statIndex, inputIndex) => {
             const value = Stat.values[statIndex];
             if (value.hasMinMax) {
-                // If stat has MinMax, consume two input values (i, i+1)
-                value.setMin(inputValues[inputIndex]);
-                value.setMax(inputValues[inputIndex + 1]);
+                // Only add the min/max if it's not the same.
+                if (inputValues[inputIndex] === inputValues[inputIndex + 1]) {
+                    value.setFloat(inputValues[inputIndex]);
+                } else {
+                    value.setMin(inputValues[inputIndex]);
+                    value.setMax(inputValues[inputIndex + 1]);
+                }
                 return 2; // Use 2 input values (min and max)
             } else {
                 // Otherwise, set the single value normally
@@ -154,6 +192,7 @@ export function useStat(iscRecord, inputValues) {
         let result = '';
 
         switch (Stat.record.desc_func_id) {
+            case undefined:
             case 0:
                 return result;
             case 1:
@@ -164,6 +203,14 @@ export function useStat(iscRecord, inputValues) {
             case 12:
             case 20:
                 result = descFn1();
+                break;
+            case 6:
+            case 7:
+            case 8:
+                result = descFn6();
+                break;
+            case 13:
+                result = descFn13();
                 break;
             case 14:
                 result = descFn14();
@@ -203,6 +250,58 @@ export function useStat(iscRecord, inputValues) {
         }
 
         return result;
+    };
+
+    const descFn6 = () => {
+        const value = Stat.values[0];
+        let stringTableKey = null;
+        let formatString = FORMAT_STRINGS.THREE_COMPONENT;
+
+        if (value.getFloat() < 0) {
+            stringTableKey = Stat.record.negative;
+        } else {
+            stringTableKey = Stat.record.positive;
+        }
+
+        const str1 = stringTableKey;
+        const str2 = Stat.record.desc_str_2;
+
+        let result = '';
+        switch (Stat.record.desc_val) {
+            case 2:
+                result = sprintf(formatString, str1, value, str2);
+                break;
+            case 1:
+                result = sprintf(formatString, value, str1, str2);
+                break;
+            case 0:
+                formatString = FORMAT_STRINGS.TWO_COMPONENT;
+                result = sprintf(formatString, value, str2);
+                break;
+            default:
+                break;
+        }
+
+        return result;
+    };
+
+    const descFn13 = () => {
+        // strings come out like `+5 to Combat Skills (Paladin Only)`
+        const value = Stat.values[0];
+        const allSkills = Stat.values[1];
+
+        const formatString = FORMAT_STRINGS.TWO_COMPONENT;
+
+        switch (Stat.record.desc_val) {
+            case 2:
+                return sprintf(formatString, value, allSkills);
+            case 1:
+                return sprintf(formatString, allSkills, value);
+            case 0:
+                return allSkills.toString();
+            default:
+                break;
+        }
     };
 
     const descFn14 = () => {

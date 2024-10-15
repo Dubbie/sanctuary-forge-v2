@@ -26,6 +26,8 @@
         "vue": "^3.4.0"
     },
     "dependencies": {
-        "@tabler/icons-vue": "^3.19.0"
+        "@headlessui/vue": "^1.7.23",
+        "@tabler/icons-vue": "^3.19.0",
+        "pinia": "^2.2.4"
     }
 }

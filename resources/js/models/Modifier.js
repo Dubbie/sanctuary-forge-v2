@@ -1,9 +1,20 @@
 class Modifier {
-    constructor(name, stats, description, source) {
+    constructor(name, stats, descFn) {
         this.name = name;
         this.stats = stats;
-        this.description = description;
-        this.source = source;
+        this.descFn = descFn;
+    }
+
+    get description() {
+        return this.descFn(this.stats);
+    }
+
+    clone() {
+        return new Modifier(
+            this.name,
+            this.stats.map((stat) => stat.clone()),
+            this.descFn,
+        );
     }
 }
 

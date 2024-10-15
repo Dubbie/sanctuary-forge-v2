@@ -51,10 +51,25 @@ export const useStatValue = () => {
 
         toString() {
             if (this.number) {
-                this.stringerFn(this.number);
+                return this.stringerFn(this.number);
             }
 
             return this.stringerFn([this.min, this.max]);
+        },
+
+        clone() {
+            const clonedStatValue = useStatValue(); // Create a new StatValue instance
+
+            // Copy all properties
+            clonedStatValue.min = this.min;
+            clonedStatValue.max = this.max;
+            clonedStatValue.hasMinMax = this.hasMinMax;
+            clonedStatValue.number = this.number;
+            clonedStatValue.numberType = this.numberType;
+            clonedStatValue.combineType = this.combineType;
+            clonedStatValue.stringerFn = this.stringerFn; // Reference to the original stringer function
+
+            return clonedStatValue;
         },
     });
 

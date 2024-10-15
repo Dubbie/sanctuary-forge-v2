@@ -1,10 +1,10 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import ItemDisplay from '@/Components/ItemDisplay.vue';
-import { useItem } from '@/composables/useItem';
+import { useItemStore } from '@/stores/itemStore';
 import AppButton from '@/Components/AppButton.vue';
 import ItemEditorModal from '@/Components/ItemEditorModal.vue';
-import { ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 const props = defineProps({
     item: {
@@ -13,9 +13,13 @@ const props = defineProps({
     },
 });
 
-const { item } = useItem(props.item);
-
+const itemStore = useItemStore();
+const itemModel = computed(() => itemStore.selectedItem);
 const showingEditorModal = ref(false);
+
+onMounted(() => {
+    itemStore.setItem(props.item);
+});
 </script>
 
 <template>
@@ -23,22 +27,15 @@ const showingEditorModal = ref(false);
         <p class="mb-6 text-lg font-bold">Item Details</p>
 
         <div class="flex items-start">
-            <ItemDisplay :item="item" />
+            <ItemDisplay v-if="itemModel" :item="itemModel" />
 
             <AppButton outline color="white" @click="showingEditorModal = true"
                 >Craft item</AppButton
             >
         </div>
 
-        <div class="bg-black text-xs">
-            <code>
-                <pre>{{ item }}</pre>
-            </code>
-        </div>
-
         <ItemEditorModal
             :show="showingEditorModal"
-            :item="item"
             @close="showingEditorModal = false"
         />
     </AppLayout>

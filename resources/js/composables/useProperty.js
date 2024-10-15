@@ -29,9 +29,8 @@ const FUNCTIONS = {
     FN_STATE_APPLY_TO_TARGET: 24,
 };
 
-export function useProperty(source, propertyDescriptor, ...inputParams) {
+export function useProperty(propertyDescriptor, ...inputParams) {
     const property = reactive({
-        source: source,
         record: propertyDescriptor.property_record || null,
         inputParams: inputParams,
         stats: [],
@@ -74,6 +73,12 @@ export function useProperty(source, propertyDescriptor, ...inputParams) {
                 property.propertyType = 'compute_stats';
                 stat = fnValuesToStat(iscRecord);
                 break;
+            case FUNCTIONS.FN_DAMAGE_MIN:
+            case FUNCTIONS.FN_DAMAGE_MAX:
+            case FUNCTIONS.FN_DAMAGE_PERCENT:
+                property.propertyType = 'compute_integer';
+                stat = fnComputeInteger(iscRecord);
+                break;
             case FUNCTIONS.FN_PROCS:
                 property.propertyType = 'compute_stats';
                 stat = fnProcs(iscRecord);
@@ -81,6 +86,14 @@ export function useProperty(source, propertyDescriptor, ...inputParams) {
             case FUNCTIONS.FN_CLASS_SKILL_TAB:
                 property.propertyType = 'compute_stats';
                 stat = fnClassSkillTab(iscRecord);
+                break;
+            case FUNCTIONS.FN_STAT_PARAM:
+                property.propertyType = 'compute_stats';
+                stat = fnStatParam(iscRecord);
+                break;
+            case FUNCTIONS.FN_CLASS_SKILLS:
+                property.propertyType = 'compute_stats';
+                stat = fnClassSkills(psr, iscRecord);
                 break;
             default:
                 throw new Error('Unknown stat function id: ' + funcId);
@@ -118,6 +131,28 @@ export function useProperty(source, propertyDescriptor, ...inputParams) {
 
         const { Stat } = useStat(iscRecord, [min, max, propParam]);
 
+        return Stat;
+    };
+
+    const fnComputeInteger = (iscRecord) => {
+        let min = null;
+        let max = null;
+
+        switch (property.inputParams.length) {
+            case 0:
+            case 1:
+                return null;
+            case 2:
+                min = property.inputParams[0];
+                max = property.inputParams[1];
+                break;
+            default:
+                min = property.inputParams[0];
+                max = property.inputParams[1];
+                break;
+        }
+
+        const { Stat } = useStat(iscRecord, [min, max]);
         return Stat;
     };
 
@@ -184,6 +219,35 @@ export function useProperty(source, propertyDescriptor, ...inputParams) {
             heroIndex,
             skillTabIndex,
         ]);
+        return Stat;
+    };
+
+    const fnStatParam = (iscRecord) => {
+        if (property.inputParams.length === 0) {
+            return null;
+        }
+
+        const { Stat } = useStat(iscRecord, [property.inputParams]);
+        return Stat;
+    };
+
+    const fnClassSkills = (psRecord, iscRecord) => {
+        let min = null;
+        let max = null;
+        let classIdx = null;
+
+        switch (property.inputParams.length) {
+            case 0:
+            case 1:
+                return null;
+            default:
+                min = property.inputParams[0];
+                max = property.inputParams[1];
+        }
+
+        classIdx = psRecord.value;
+
+        const { Stat } = useStat(iscRecord, [min, max, classIdx]);
         return Stat;
     };
 

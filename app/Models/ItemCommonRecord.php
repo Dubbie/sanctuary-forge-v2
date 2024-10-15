@@ -57,19 +57,12 @@ class ItemCommonRecord extends Model
     ];
 
     protected $with = ['itemType'];
-    protected $appends = ['image_url', 'automagic_affix', 'hardcoded_affixes'];
+    protected $appends = ['image_url', 'hardcoded_affixes'];
 
     public function imageUrl(): Attribute
     {
         return Attribute::make(
             get: fn() => $this->getImageUrl(),
-        );
-    }
-
-    public function automagicAffix(): Attribute
-    {
-        return Attribute::make(
-            get: fn() => $this->getAutomagicAffix(),
         );
     }
 
@@ -88,16 +81,6 @@ class ItemCommonRecord extends Model
     private function getImageUrl(): string
     {
         return '/img/' . $this->inventory_file . '.png';
-    }
-
-    private function getAutomagicAffix(): ?ItemAffixCommon
-    {
-        if ($this->auto_prefix) {
-            $affix = ItemAffixCommon::where('group', '=', $this->auto_prefix)->orderBy('min_level', 'desc')->first();
-            return $affix;
-        }
-
-        return null;
     }
 
     private function getHardcodedAffixes(): array
