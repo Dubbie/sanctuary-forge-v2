@@ -94,6 +94,12 @@ export function useStat(iscRecord, inputValues) {
                     .setHasMinMax(true)
                     .setStringer(stringerIntPercentageSigned);
                 break;
+            case 5:
+                // Hit Causes Monster to Flee 25%
+                Stat.values[0] = newStatValue(INT_VAL, SUM)
+                    .setHasMinMax(true)
+                    .setStringer(stringerIntPercentageSigned);
+                break;
             case 6:
                 // +25 to Life (Based on Character Level)
                 Stat.values[0] = newStatValue(INT_VAL, SUM).setStringer(

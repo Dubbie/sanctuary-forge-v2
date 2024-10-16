@@ -25,14 +25,6 @@ export const useAffixStore = defineStore('affix', {
             const { prefixes, suffixes, automagic } = data;
             this.rawAffixes = { prefixes, suffixes, automagic };
 
-            // this.rawAffixes.suffixes.forEach((affix) => {
-            //     affix.properties.forEach((prop) => {
-            //         if (prop.code === 'dmg-max') {
-            //             console.log(prop);
-            //         }
-            //     });
-            // });
-
             this.generateAffixesWithModifiers();
         },
 
@@ -44,7 +36,7 @@ export const useAffixStore = defineStore('affix', {
             };
 
             // Generate modifiers for each affix
-            const keys = ['automagic', 'suffixes'];
+            const keys = ['automagic', 'suffixes', 'prefixes'];
             for (const key of keys) {
                 for (const affix of this.rawAffixes[key]) {
                     this.generateModifiersByAffix(affix, key);

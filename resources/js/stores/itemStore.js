@@ -45,10 +45,17 @@ export const useItemStore = defineStore('item', {
         },
 
         addSuffix(suffix) {
-            const clonedSuffix = suffix.clone();
-            console.log(clonedSuffix);
+            const clone = suffix.clone();
+            console.log(clone);
 
-            this.selectedSuffixes.push(clonedSuffix);
+            this.selectedSuffixes.push(clone);
+        },
+
+        addPrefix(prefix) {
+            const clone = prefix.clone();
+            console.log(clone);
+
+            this.selectedPrefixes.push(clone);
         },
 
         updateAutomagicModifier(statName, value) {

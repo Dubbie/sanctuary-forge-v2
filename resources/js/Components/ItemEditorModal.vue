@@ -24,22 +24,33 @@ const item = computed(() => {
 const selectedAutomod = computed(() => {
     return itemStore.selectedAutomod;
 });
+const selectedPrefixes = computed(() => {
+    return itemStore.selectedPrefixes;
+});
 const selectedSuffixes = computed(() => {
     return itemStore.selectedSuffixes;
 });
 const automodOptions = computed(() => {
-    return affixStore.availableAffixes.automagic.map((automod) => {
+    return affixStore.availableAffixes.automagic.map((affix) => {
         return {
-            label: automod.description,
-            value: automod,
+            label: affix.description,
+            value: affix,
+        };
+    });
+});
+const prefixOptions = computed(() => {
+    return affixStore.availableAffixes.prefixes.map((affix) => {
+        return {
+            label: affix.description,
+            value: affix,
         };
     });
 });
 const suffixOptions = computed(() => {
-    return affixStore.availableAffixes.suffixes.map((automod) => {
+    return affixStore.availableAffixes.suffixes.map((affix) => {
         return {
-            label: automod.description,
-            value: automod,
+            label: affix.description,
+            value: affix,
         };
     });
 });
@@ -83,6 +94,29 @@ defineEmits(['close']);
             <div v-if="item">
                 <div class="flex justify-start">
                     <ItemDisplay :item="item" />
+                </div>
+
+                <div class="mt-6" v-if="prefixOptions.length">
+                    <p
+                        class="mb-2 border-b border-white/10 text-lg font-semibold"
+                    >
+                        Prefixes
+                    </p>
+
+                    <SelectInput
+                        :model-value="selectedAutomod"
+                        @update:model-value="itemStore.addPrefix"
+                        :options="prefixOptions"
+                        empty-label="Select a prefix..."
+                    />
+
+                    <div v-if="selectedPrefixes">
+                        <div v-for="prefix in selectedPrefixes" :key="prefix">
+                            <p class="text-sm font-medium">
+                                {{ prefix.description }}
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="mt-6" v-if="suffixOptions.length">

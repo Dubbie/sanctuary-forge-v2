@@ -2,6 +2,7 @@ import { useProperty } from '@/composables/useProperty';
 import ModifierManager from '@/managers/ModifierManager';
 import Modifier from '@/models/Modifier';
 import ColdDamageStrategy from '@/strategies/ColdDamageStrategy';
+import EnhancedDamageStrategy from '@/strategies/EnhancedDamageStrategy';
 import FireDamageStrategy from '@/strategies/FireDamageStrategy';
 import LightningDamageStrategy from '@/strategies/LightningDamageStrategy';
 import PoisonDamageStrategy from '@/strategies/PoisonDamageStrategy';
@@ -33,6 +34,10 @@ export function getModifiersByPropertyDescriptors(propertyDescriptors) {
         lightning: {
             strategy: new LightningDamageStrategy(),
             stats: ['lightmindam', 'lightmaxdam'],
+        },
+        enhanced: {
+            strategy: new EnhancedDamageStrategy(),
+            stats: ['item_mindamage_percent'],
         },
     };
 
