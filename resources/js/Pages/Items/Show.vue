@@ -15,6 +15,7 @@ const props = defineProps({
 
 const itemStore = useItemStore();
 const itemModel = computed(() => itemStore.selectedItem);
+const loading = computed(() => itemStore.loading);
 const showingEditorModal = ref(false);
 
 onMounted(() => {
@@ -26,17 +27,26 @@ onMounted(() => {
     <AppLayout title="Item Details">
         <p class="mb-6 text-lg font-bold">Item Details</p>
 
-        <div class="flex items-start">
-            <ItemDisplay v-if="itemModel" :item="itemModel" />
+        <div v-if="!loading">
+            <div class="flex items-start">
+                <ItemDisplay v-if="itemModel" :item="itemModel" />
 
-            <AppButton outline color="white" @click="showingEditorModal = true"
-                >Craft item</AppButton
-            >
+                <AppButton
+                    outline
+                    color="white"
+                    @click="showingEditorModal = true"
+                    >Craft item</AppButton
+                >
+            </div>
+
+            <ItemEditorModal
+                :show="showingEditorModal"
+                @close="showingEditorModal = false"
+            />
         </div>
 
-        <ItemEditorModal
-            :show="showingEditorModal"
-            @close="showingEditorModal = false"
-        />
+        <div v-else>
+            <p>Loading possible affixes for the selected item...</p>
+        </div>
     </AppLayout>
 </template>

@@ -78,6 +78,55 @@ class ItemCommonRecord extends Model
         return $this->hasOne(ItemTypeRecord::class, 'code', 'type');
     }
 
+    /**
+     * Recursively get all equivalent types for the item.
+     *
+     * @return array
+     */
+    public function getAllEquivTypes()
+    {
+        $types = [$this->type];
+
+        foreach ($this->itemType->equivRecords as $equivRecord) {
+            $equivTypes = $this->getEquivTypesRecursive([$equivRecord->equiv_code]);
+
+            foreach ($equivTypes as $equivType) {
+                if (!in_array($equivType, $types)) {
+                    $types[] = $equivType;
+                }
+            }
+        }
+
+        return array_unique($types);
+    }
+
+    /**
+     * Recursive function to fetch all equivalent types.
+     *
+     * @param array $types
+     * @return array
+     */
+    protected function getEquivTypesRecursive(array $types)
+    {
+        $allTypes = $types;
+
+        foreach ($types as $type) {
+            $itemType = ItemTypeRecord::where('code', $type)->first();
+            if ($itemType) {
+                $equivTypes = $itemType->equivRecords->pluck('equiv_code')->toArray();
+
+                foreach ($equivTypes as $equivType) {
+                    if (!in_array($equivType, $allTypes)) {
+                        $allTypes[] = $equivType;
+                        $allTypes = array_merge($allTypes, $this->getEquivTypesRecursive([$equivType]));
+                    }
+                }
+            }
+        }
+
+        return array_unique($allTypes);
+    }
+
     private function getImageUrl(): string
     {
         return '/img/' . $this->inventory_file . '.png';

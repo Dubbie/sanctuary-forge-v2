@@ -24,8 +24,19 @@ const item = computed(() => {
 const selectedAutomod = computed(() => {
     return itemStore.selectedAutomod;
 });
+const selectedSuffixes = computed(() => {
+    return itemStore.selectedSuffixes;
+});
 const automodOptions = computed(() => {
     return affixStore.availableAffixes.automagic.map((automod) => {
+        return {
+            label: automod.description,
+            value: automod,
+        };
+    });
+});
+const suffixOptions = computed(() => {
+    return affixStore.availableAffixes.suffixes.map((automod) => {
         return {
             label: automod.description,
             value: automod,
@@ -74,7 +85,30 @@ defineEmits(['close']);
                     <ItemDisplay :item="item" />
                 </div>
 
-                <div class="mt-6">
+                <div class="mt-6" v-if="suffixOptions.length">
+                    <p
+                        class="mb-2 border-b border-white/10 text-lg font-semibold"
+                    >
+                        Suffixes
+                    </p>
+
+                    <SelectInput
+                        :model-value="selectedAutomod"
+                        @update:model-value="itemStore.addSuffix"
+                        :options="suffixOptions"
+                        empty-label="Select a suffix..."
+                    />
+
+                    <div v-if="selectedSuffixes">
+                        <div v-for="suffix in selectedSuffixes" :key="suffix">
+                            <p class="text-sm font-medium">
+                                {{ suffix.description }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6" v-if="automodOptions.length">
                     <p
                         class="mb-2 border-b border-white/10 text-lg font-semibold"
                     >

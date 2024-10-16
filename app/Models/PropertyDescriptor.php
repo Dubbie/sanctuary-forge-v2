@@ -15,7 +15,7 @@ class PropertyDescriptor extends Model
         'max',        // Maximum value
     ];
 
-    protected $with = ['propertyRecord'];
+    protected $with = ['propertyRecord', 'propertyStatRecords'];
 
     /**
      * Get the owning propertyHolder model (SetItem, UniqueItem, Set, MagicPrefix, etc.).
@@ -38,6 +38,6 @@ class PropertyDescriptor extends Model
      */
     public function propertyStatRecords()
     {
-        return $this->hasManyThrough(PropertyStatRecord::class, PropertyRecord::class);
+        return $this->hasManyThrough(PropertyStatRecord::class, PropertyRecord::class, 'code', 'property_code', 'code', 'code');
     }
 }

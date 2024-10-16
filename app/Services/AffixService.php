@@ -15,16 +15,30 @@ class AffixService
 
         $affixes = self::getFilteredAffixes($types, $item);
 
+        // Check for missing stat maps
+        foreach ($affixes as $affix) {
+            $propertyDescriptors = $affix->properties;
+
+            foreach ($propertyDescriptors as $propertyDescriptor) {
+                if (in_array($propertyDescriptor->code, array_keys(PseudoPropertyStatService::PROPERTY_STAT_MAP))) {
+                    $modifiedPropertyDescriptor = PseudoPropertyStatService::attachPseudoPropertyStats($propertyDescriptor);
+
+                    // Update the existing property descriptor in place
+                    $index = $propertyDescriptors->search($propertyDescriptor);
+                    if ($index !== false) {
+                        $propertyDescriptors[$index] = $modifiedPropertyDescriptor; // Replace the old descriptor with the updated one
+                    }
+                }
+            }
+
+            // Return the updated properties back to the affix
+            $affix->setRelation('properties', $propertyDescriptors);
+        }
+
         // Filter prefixes, suffixes, and automagic affixes
-        $prefixes = $affixes->filter(function ($affix) {
-            return $affix->type === 'prefix' && $affix->automagic === 0;
-        });
-        $suffixes = $affixes->filter(function ($affix) {
-            return $affix->type === 'suffix' && $affix->automagic === 0;
-        });
-        $automagic = $affixes->filter(function ($affix) use ($item) {
-            return $affix->automagic === 1 && $affix->group === $item->auto_prefix;
-        });
+        $prefixes = $affixes->filter(fn($affix) => $affix->type === 'prefix' && $affix->automagic === 0);
+        $suffixes = $affixes->filter(fn($affix) => $affix->type === 'suffix' && $affix->automagic === 0);
+        $automagic = $affixes->filter(fn($affix) => $affix->automagic === 1 && $affix->group === $item->auto_prefix);
 
         return [
             'prefixes' => array_values($prefixes->toArray()),

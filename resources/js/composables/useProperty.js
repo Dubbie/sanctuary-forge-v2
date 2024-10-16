@@ -91,12 +91,19 @@ export function useProperty(propertyDescriptor, ...inputParams) {
                 property.propertyType = 'compute_stats';
                 stat = fnStatParam(iscRecord);
                 break;
+            case FUNCTIONS.FN_INDESTRUCTIBLE:
+            case FUNCTIONS.FN_ETHEREAL:
+                console.warn('Not implemented: ' + funcId);
+                stat = null;
+                break;
             case FUNCTIONS.FN_CLASS_SKILLS:
                 property.propertyType = 'compute_stats';
                 stat = fnClassSkills(psr, iscRecord);
                 break;
             default:
-                throw new Error('Unknown stat function id: ' + funcId);
+                console.warn('Unknown stat function id: ' + funcId);
+                stat = null;
+                break;
         }
 
         return {
@@ -143,12 +150,12 @@ export function useProperty(propertyDescriptor, ...inputParams) {
             case 1:
                 return null;
             case 2:
-                min = property.inputParams[0];
-                max = property.inputParams[1];
+                min = property.inputParams[1];
+                max = property.inputParams[2];
                 break;
             default:
-                min = property.inputParams[0];
-                max = property.inputParams[1];
+                min = property.inputParams[1];
+                max = property.inputParams[2];
                 break;
         }
 
@@ -227,7 +234,7 @@ export function useProperty(propertyDescriptor, ...inputParams) {
             return null;
         }
 
-        const { Stat } = useStat(iscRecord, [property.inputParams]);
+        const { Stat } = useStat(iscRecord, [property.inputParams[0]]);
         return Stat;
     };
 

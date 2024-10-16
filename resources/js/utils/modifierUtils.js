@@ -1,6 +1,9 @@
 import { useProperty } from '@/composables/useProperty';
 import ModifierManager from '@/managers/ModifierManager';
 import Modifier from '@/models/Modifier';
+import ColdDamageStrategy from '@/strategies/ColdDamageStrategy';
+import FireDamageStrategy from '@/strategies/FireDamageStrategy';
+import LightningDamageStrategy from '@/strategies/LightningDamageStrategy';
 import PoisonDamageStrategy from '@/strategies/PoisonDamageStrategy';
 
 /**
@@ -12,18 +15,33 @@ import PoisonDamageStrategy from '@/strategies/PoisonDamageStrategy';
 export function getModifiersByPropertyDescriptors(propertyDescriptors) {
     // Initialize ModifierManager and register strategies
     const modifierManager = new ModifierManager();
-    modifierManager.registerStrategy(
-        'poisonmindam',
-        new PoisonDamageStrategy(),
-    );
-    modifierManager.registerStrategy(
-        'poisonmaxdam',
-        new PoisonDamageStrategy(),
-    );
-    modifierManager.registerStrategy(
-        'poisonlength',
-        new PoisonDamageStrategy(),
-    );
+
+    // Define a configuration for registering strategies
+    const strategyConfig = {
+        poison: {
+            strategy: new PoisonDamageStrategy(),
+            stats: ['poisonmindam', 'poisonmaxdam', 'poisonlength'],
+        },
+        cold: {
+            strategy: new ColdDamageStrategy(),
+            stats: ['coldmindam', 'coldmaxdam', 'coldlength'],
+        },
+        fire: {
+            strategy: new FireDamageStrategy(),
+            stats: ['firemindam', 'firemaxdam'],
+        },
+        lightning: {
+            strategy: new LightningDamageStrategy(),
+            stats: ['lightmindam', 'lightmaxdam'],
+        },
+    };
+
+    // Register strategies dynamically
+    for (const { strategy, stats } of Object.values(strategyConfig)) {
+        stats.forEach((stat) =>
+            modifierManager.registerStrategy(stat, strategy),
+        );
+    }
 
     // Step 1: Generate properties by property descriptors
     const properties =
@@ -60,6 +78,15 @@ function generatePropertiesByPropertyDescriptors(propertyDescriptors) {
  */
 function generateModifiersByProperties(properties, modifierManager) {
     let modifiers = [];
+
+    properties.forEach((property) => {
+        property.stats.forEach((stat) => {
+            if (!stat.record) {
+                console.log('No stat record for this property!');
+                console.log(property);
+            }
+        });
+    });
 
     // Get a flat map of all the stats from the properties
     let stats = properties.flatMap((property) => property.stats);

@@ -4,11 +4,16 @@ import { useAffixStore } from './affixStore';
 
 export const useItemStore = defineStore('item', {
     state: () => ({
+        loading: true,
         selectedItem: null,
         selectedAutomod: null,
+        selectedSuffixes: [],
+        selectedPrefixes: [],
     }),
     actions: {
         async setItem(item) {
+            this.loading = true;
+
             const { item: _item } = useItem(item);
             this.selectedItem = _item;
 
@@ -22,6 +27,8 @@ export const useItemStore = defineStore('item', {
                     );
                 }
             }
+
+            this.loading = false;
         },
 
         setSelectedAutomod(automod) {
@@ -35,6 +42,13 @@ export const useItemStore = defineStore('item', {
             }
 
             this.selectedAutomod = automod.clone();
+        },
+
+        addSuffix(suffix) {
+            const clonedSuffix = suffix.clone();
+            console.log(clonedSuffix);
+
+            this.selectedSuffixes.push(clonedSuffix);
         },
 
         updateAutomagicModifier(statName, value) {

@@ -55,10 +55,6 @@ export function useStat(iscRecord, inputValues) {
         // Create stat values based on the desc func id
         const descFuncId = Stat.record.desc_func_id;
 
-        if (!descFuncId) {
-            console.log(Stat.record);
-        }
-
         switch (descFuncId) {
             case undefined:
             case 0:
@@ -103,6 +99,10 @@ export function useStat(iscRecord, inputValues) {
                 Stat.values[0] = newStatValue(INT_VAL, SUM).setStringer(
                     stringerIntSigned,
                 );
+                break;
+            case 11:
+                // Repairs 2 durability per second
+                Stat.values[0] = newStatValue(INT_VAL, SUM);
                 break;
             case 13:
                 // +5 to Paladin Skill Levels
@@ -209,6 +209,9 @@ export function useStat(iscRecord, inputValues) {
             case 8:
                 result = descFn6();
                 break;
+            case 11:
+                result = descFn11();
+                break;
             case 13:
                 result = descFn13();
                 break;
@@ -283,6 +286,17 @@ export function useStat(iscRecord, inputValues) {
         }
 
         return result;
+    };
+
+    const descFn11 = () => {
+        const value = Stat.values[0];
+
+        let formatString = Stat.record.positive;
+        if (value.getFloat() < 0) {
+            formatString = Stat.record.negative;
+        }
+
+        return sprintf(formatString, value);
     };
 
     const descFn13 = () => {

@@ -12,6 +12,7 @@ class PropertyStatRecord extends Model
         'property_code',
         'stat',
         'value',
+        'set_id',
         'function_id'
     ];
 

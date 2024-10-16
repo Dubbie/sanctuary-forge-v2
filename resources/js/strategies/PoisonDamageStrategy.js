@@ -24,8 +24,6 @@ class PoisonDamageStrategy extends ModifierStrategy {
     }
 
     getDescription(stats) {
-        console.log(stats);
-
         const poisonMin = stats.find(
             (stat) => stat.record.name === 'poisonmindam',
         );
@@ -56,9 +54,9 @@ class PoisonDamageStrategy extends ModifierStrategy {
         return min === max ? min.toString() : `[${min}-${max}]`;
     }
 
-    formatCombinedDamage(minStat, maxStat) {
-        const formattedMin = this.formatDamageRange(minStat.min, minStat.max);
-        const formattedMax = this.formatDamageRange(maxStat.min, maxStat.max);
+    formatCombinedDamage(minDmg, maxDmg) {
+        const formattedMin = this.formatDamageRange(minDmg.min, minDmg.max);
+        const formattedMax = this.formatDamageRange(maxDmg.min, maxDmg.max);
 
         return formattedMin === formattedMax
             ? formattedMin

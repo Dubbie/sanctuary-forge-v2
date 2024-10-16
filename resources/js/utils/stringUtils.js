@@ -1,6 +1,6 @@
 export const sprintf = (format, ...args) => {
     let i = 0;
-    return format.replace(/%[sd]/g, (match) => {
+    return format.replace(/%%|%[sd]/g, (match) => {
         if (match === '%%') {
             return '%'; // Literal % sign
         } else if (match === '%s') {
