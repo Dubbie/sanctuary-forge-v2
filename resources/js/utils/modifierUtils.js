@@ -1,6 +1,7 @@
 import { useProperty } from '@/composables/useProperty';
 import ModifierManager from '@/managers/ModifierManager';
 import Modifier from '@/models/Modifier';
+import AllResistanceStrategy from '@/strategies/AllResistanceStrategy';
 import ColdDamageStrategy from '@/strategies/ColdDamageStrategy';
 import EnhancedDamageStrategy from '@/strategies/EnhancedDamageStrategy';
 import FireDamageStrategy from '@/strategies/FireDamageStrategy';
@@ -39,6 +40,10 @@ export function getModifiersByPropertyDescriptors(propertyDescriptors) {
             strategy: new EnhancedDamageStrategy(),
             stats: ['item_mindamage_percent'],
         },
+        allres: {
+            strategy: new AllResistanceStrategy(),
+            stats: ['fireresist', 'coldresist', 'lightresist', 'poisonresist']
+        }
     };
 
     // Register strategies dynamically
